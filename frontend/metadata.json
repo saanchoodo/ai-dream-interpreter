@@ -1,0 +1,7 @@
+{
+  "name": "AI Sleep Reader",
+  "description": "An AI-powered chat application to help users analyze and improve their sleep patterns. Users can log in with their name and birth date to receive personalized sleep advice.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
