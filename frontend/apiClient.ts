@@ -1,6 +1,6 @@
 // frontend/apiClient.ts
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://ai-dream-interpreter.onrender.com';
 
 // Функция для регистрации нового пользователя
 export const createUser = async (name: string, dob: string): Promise<{ id: number; name: string }> => {

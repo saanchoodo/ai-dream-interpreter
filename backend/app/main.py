@@ -22,6 +22,7 @@ origins = [
     "http://localhost:8080",
     "http://127.0.0.1",
     "http://localhost:3000",
+    "https://capable-griffin-842512.netlify.app/",
     "null"  # Для локальных файлов, открытых в браузере (file://)
 ]
 
