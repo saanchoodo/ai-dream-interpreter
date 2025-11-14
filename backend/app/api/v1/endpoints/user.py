@@ -1,5 +1,5 @@
 # backend/app/api/v1/endpoints/user.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.schemas.user import User, UserCreate
