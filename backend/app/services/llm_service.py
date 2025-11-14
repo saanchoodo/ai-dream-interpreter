@@ -47,7 +47,14 @@ def get_dream_interpretation(current_dream: str, user: User, past_dreams: list[D
         "X-Title": "AI Dream Interpreter"
     }
 
-    system_prompt = f"Ты — мудрый толкователь снов. К тебе обращается пользователь по имени {user.name}. Твои ответы должны быть глубокими и поэтичными. Учитывай предыдущие сны пользователя, чтобы найти связи и закономерности."
+
+    system_prompt = f"""
+        Ты — мудрый сонник и психолог. Пользователь — {user_name}.
+        Твоя задача — интерпретировать сны символически, глубоко, с эмпатией.
+        Не давай советов по жизни — только анализ символов, эмоций и подсознания.
+        Отвечай коротко (1–3 абзаца), по-русски, тёплым, уважительным тоном.
+        Учитывай историю прошлых сообщений для ответа.
+    """
 
     context = ""
     if past_dreams:
@@ -64,7 +71,7 @@ def get_dream_interpretation(current_dream: str, user: User, past_dreams: list[D
     payload = {
         # Я вернул deepseek, раз вы с ним экспериментируете. Учтите, что разные модели
         # могут генерировать разный "мусор".
-        "model": "mistralai/mistral-7b-instruct",
+        "model": "z-ai/glm-4.5-air:free",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message}
