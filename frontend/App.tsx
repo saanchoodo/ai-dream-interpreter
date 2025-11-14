@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <--- 1. Импортируем useEffect
+import React, { useState, useEffect } from 'react';
 import LoginScreen from './components/LoginScreen';
 import ChatScreen from './components/ChatScreen';
 import { User } from './types';
@@ -6,40 +6,50 @@ import { User } from './types';
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
-  // --- 2. ДОБАВЛЯЕМ ЛОГИКУ ПРОВЕРКИ СЕССИИ ПРИ ЗАПУСКЕ ---
+  // --- 1. ОБНОВЛЕННАЯ ЛОГИКА ПРОВЕРКИ СЕССИИ ---
   useEffect(() => {
-    // Пытаемся достать ID пользователя из хранилища браузера
+    // Пытаемся достать все данные пользователя из хранилища браузера
     const storedUserId = localStorage.getItem('dream_user_id');
-    const storedUserName = localStorage.getItem('dream_user_name');
+    const storedUserFirstName = localStorage.getItem('dream_user_firstName');
+    const storedUserLastName = localStorage.getItem('dream_user_lastName');
     const storedUserDob = localStorage.getItem('dream_user_dob');
+    const storedUserPhone = localStorage.getItem('dream_user_phone');
 
-    // Если все данные есть, считаем, что пользователь уже вошел в систему
-    if (storedUserId && storedUserName && storedUserDob) {
+    // Если есть хотя бы ID и имя, считаем, что пользователь вошел в систему
+    if (storedUserId && storedUserFirstName && storedUserDob && storedUserPhone) {
       setUser({
         id: parseInt(storedUserId),
-        name: storedUserName,
-        birthDate: storedUserDob,
+        firstName: storedUserFirstName,
+        // lastName может быть null, поэтому проверяем его наличие
+        lastName: storedUserLastName === 'null' ? null : storedUserLastName,
+        dob: storedUserDob,
+        phone: storedUserPhone,
       });
     }
-  }, []); // Пустой массив зависимостей означает, что этот код выполнится только один раз при запуске
+  }, []); // Пустой массив зависимостей = выполнится только один раз
 
-  // --- 3. АДАПТИРУЕМ ФУНКЦИЮ ЛОГИНА ---
-  // Теперь она будет принимать объект User целиком от LoginScreen
+  // --- 2. ОБНОВЛЕННАЯ ФУНКЦИЯ ЛОГИНА ---
   const handleLogin = (loggedInUser: User) => {
-    // Сохраняем все данные о пользователе в localStorage, чтобы "запомнить" его
+    // Сохраняем все новые поля в localStorage
     localStorage.setItem('dream_user_id', String(loggedInUser.id));
-    localStorage.setItem('dream_user_name', loggedInUser.name);
-    localStorage.setItem('dream_user_dob', loggedInUser.birthDate);
-    
-    // Устанавливаем пользователя в состояние, что вызовет переключение на экран чата
+    localStorage.setItem('dream_user_firstName', loggedInUser.firstName);
+    // lastName может быть null, поэтому сохраняем его как строку 'null'
+    localStorage.setItem('dream_user_lastName', String(loggedInUser.lastName));
+    localStorage.setItem('dream_user_dob', loggedInUser.dob);
+    localStorage.setItem('dream_user_phone', loggedInUser.phone);
+
+    // Устанавливаем пользователя в состояние, чтобы переключить экран
     setUser(loggedInUser);
   };
-  
+
+  // --- 3. ОБНОВЛЕННАЯ ФУНКЦИЯ ВЫХОДА ---
   const handleLogout = () => {
-    // Очищаем localStorage при выходе
+    // Очищаем все ключи из localStorage при выходе
     localStorage.removeItem('dream_user_id');
-    localStorage.removeItem('dream_user_name');
+    localStorage.removeItem('dream_user_firstName');
+    localStorage.removeItem('dream_user_lastName');
     localStorage.removeItem('dream_user_dob');
+    localStorage.removeItem('dream_user_phone');
     setUser(null);
   };
 

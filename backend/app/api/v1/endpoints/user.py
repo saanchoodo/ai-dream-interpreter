@@ -11,21 +11,31 @@ from typing import List
 
 router = APIRouter()
 
-@router.post("/", response_model=User)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(UserModel).filter(
-        UserModel.name == user.name,
-        UserModel.dob == user.dob
-    ).first()
 
-    # 2. Если пользователь найден - возвращаем его
-    if db_user:
-        print(f"Пользователь '{user.name}' найден. Выполняется вход.")
-        return db_user
+@router.post("/", response_model=User, status_code=201)  # Используем 201 Created для новых
+def create_user_if_not_exists(user_data: UserCreate, db: Session = Depends(get_db)):
+    """
+    Создает нового пользователя, если номера телефона еще нет в базе.
+    Если номер уже существует, возвращает ошибку 409 Conflict.
+    """
+    # 1. Ищем пользователя по УНИКАЛЬНОМУ номеру телефона
+    existing_user = db.query(UserModel).filter(UserModel.phone == user_data.phone).first()
 
-    # 3. Если пользователь не найден - создаем нового
-    print(f"Пользователь '{user.name}' не найден. Создается новая запись.")
-    new_user = UserModel(name=user.name, dob=user.dob)
+    # 2. Если пользователь с таким телефоном уже есть - возвращаем ошибку
+    if existing_user:
+        # 409 Conflict - стандартный код для таких ситуаций
+        raise HTTPException(
+            status_code=409,
+            detail="Пользователь с таким номером телефона уже зарегистрирован."
+        )
+
+    # 3. Если все хорошо - создаем нового пользователя
+    new_user = UserModel(
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        dob=user_data.dob,
+        phone=user_data.phone
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

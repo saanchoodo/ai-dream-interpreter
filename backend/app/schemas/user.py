@@ -3,8 +3,10 @@ from pydantic import BaseModel
 from datetime import date
 
 class UserBase(BaseModel):
-    name: str
-    dob: date | None = None # Дата рождения - необязательное поле
+    first_name: str
+    last_name: str | None = None
+    dob: date
+    phone: str
 
 class UserCreate(UserBase):
     pass
@@ -13,4 +15,4 @@ class User(UserBase):
     id: int
 
     class Config:
-        from_attributes = True # Раньше называлось orm_mode
+        from_attributes = True
