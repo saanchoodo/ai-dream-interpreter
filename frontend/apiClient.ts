@@ -87,3 +87,33 @@ export const createInvoice = async (userId: number): Promise<{ payment_url: stri
 
     return response.json();
 };
+
+
+
+export const interpretGuestDream = async (text: string): Promise<{ interpretation: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/chat/interpret_guest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new ApiError(response, errorData);
+    }
+    return response.json();
+};
+
+export const loginUser = async (phone: string): Promise<UserResponse> => {
+    const response = await fetch(`${API_БASE_URL}/api/v1/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new ApiError(response, errorData);
+    }
+
+    return response.json();
+};

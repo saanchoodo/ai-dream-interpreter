@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { MoonIcon } from './icons';
-import { createUser, ApiError } from '../apiClient';
+import { createUser, ApiError } from '../apiClient'; // Убираем 'loginUser'
 
 interface LoginScreenProps {
   onLogin: (user: User) => void;
@@ -26,6 +26,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setIsLoading(true);
 
     try {
+      // Вызываем единый "умный" эндпоинт. Бэкенд сам решит, что делать.
       const userFromApi = await createUser({
         first_name: firstName,
         last_name: lastName || null,
@@ -33,7 +34,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         phone: phone,
       });
 
-      // ВАЖНО: Адаптируем ответ от бэкенда (snake_case) к формату фронтенда (camelCase)
       const loggedInUser: User = {
         id: userFromApi.id,
         firstName: userFromApi.first_name,
@@ -45,14 +45,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       onLogin(loggedInUser);
 
     } catch (err) {
-      console.error("Ошибка при создании пользователя:", err);
-
-      if (err instanceof ApiError && err.response.status === 409) {
-        setError(err.data.detail || 'Пользователь с таким номером уже существует.');
+      // Ловим и отображаем любую ошибку от бэкенда (включая 409)
+      if (err instanceof ApiError) {
+        setError(err.data.detail || "Произошла неизвестная ошибка.");
       } else {
-        setError('Не удалось войти. Пожалуйста, попробуйте снова.');
+        setError('Не удалось связаться с сервером. Попробуйте снова.');
       }
-
     } finally {
       setIsLoading(false);
     }
@@ -65,86 +63,32 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             <div className="mx-auto h-16 w-16 text-indigo-400">
                 <MoonIcon />
             </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            ИИ Сонник
-          </h1>
-          <p className="mt-2 text-lg text-slate-400">
-            Раскройте тайны своих снов. Давайте начнем.
-          </p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">ИИ Сонник</h1>
+          <p className="mt-2 text-lg text-slate-400">Раскройте тайны своих снов. Давайте начнем.</p>
         </div>
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* --- ПОЛНОСТЬЮ ОБНОВЛЕННАЯ ВЕРСТКА С НОВЫМИ ПОЛЯМИ --- */}
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-slate-300">
-              Имя
-            </label>
+            <label htmlFor="firstName" className="block text-sm font-medium text-slate-300">Имя</label>
             <div className="mt-1">
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                autoComplete="given-name"
-                required
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Введите ваше имя"
-                disabled={isLoading}
-              />
+              <input id="firstName" name="firstName" type="text" autoComplete="given-name" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Введите ваше имя" disabled={isLoading} />
             </div>
           </div>
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-slate-300">
-              Фамилия <span className="text-slate-500">(необязательно)</span>
-            </label>
+            <label htmlFor="lastName" className="block text-sm font-medium text-slate-300">Фамилия <span className="text-slate-500">(необязательно)</span></label>
             <div className="mt-1">
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                autoComplete="family-name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Введите вашу фамилию"
-                disabled={isLoading}
-              />
+              <input id="lastName" name="lastName" type="text" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Введите вашу фамилию" disabled={isLoading} />
             </div>
           </div>
           <div>
-            <label htmlFor="birthdate" className="block text-sm font-medium text-slate-300">
-              Дата рождения
-            </label>
+            <label htmlFor="birthdate" className="block text-sm font-medium text-slate-300">Дата рождения</label>
             <div className="mt-1">
-              <input
-                id="birthdate"
-                name="birthdate"
-                type="date"
-                required
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                disabled={isLoading}
-              />
+              <input id="birthdate" name="birthdate" type="date" required value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" disabled={isLoading} />
             </div>
           </div>
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-slate-300">
-              Номер телефона
-            </label>
+            <label htmlFor="phone" className="block text-sm font-medium text-slate-300">Номер телефона</label>
             <div className="mt-1">
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="+7 (999) 999-99-99"
-                disabled={isLoading}
-              />
+              <input id="phone" name="phone" type="tel" autoComplete="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="block w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md shadow-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="+7 (999) 999-99-99" disabled={isLoading} />
             </div>
           </div>
 

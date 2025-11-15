@@ -160,7 +160,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ user, onLogout }) => {
       // Запоминаем текущую длину массива сообщений, чтобы правильно передать индекс
       const newIndex = messages.length;
       setMessages((prev) => [...prev.slice(0, -1), botMessage]);
-      handlePlayBrowserTTS(botMessage.text, newIndex);
     } catch (error) {
         console.error("Failed to send message:", error);
         let errorText = "Произошла ошибка. Пожалуйста, попробуйте отправить сообщение еще раз.";
