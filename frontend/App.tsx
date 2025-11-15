@@ -1,61 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import LoginScreen from './components/LoginScreen';
 import ChatScreen from './components/ChatScreen';
-import { User } from './types';
+import RegisterModal from './components/RegisterModal';
+import { User, ChatMessage } from './types';
+
+// Вынесем приветствие в константу для переиспользования
+const GUEST_WELCOME_MESSAGE: ChatMessage = {
+    role: 'bot',
+    text: `Здравствуйте! Я - ваш персональный толкователь снов. Расскажите, что вам приснилось, и я помогу раскрыть тайны вашего подсознания.`
+};
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isGuest, setIsGuest] = useState(true);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [guestMessages, setGuestMessages] = useState<ChatMessage[]>([]);
 
-  // --- 1. ОБНОВЛЕННАЯ ЛОГИКА ПРОВЕРКИ СЕССИИ ---
   useEffect(() => {
-    // Пытаемся достать все данные пользователя из хранилища браузера
+    // Проверяем localStorage при запуске
     const storedUserId = localStorage.getItem('dream_user_id');
     const storedUserFirstName = localStorage.getItem('dream_user_firstName');
     const storedUserLastName = localStorage.getItem('dream_user_lastName');
     const storedUserDob = localStorage.getItem('dream_user_dob');
     const storedUserPhone = localStorage.getItem('dream_user_phone');
 
-    // Если есть хотя бы ID и имя, считаем, что пользователь вошел в систему
     if (storedUserId && storedUserFirstName && storedUserDob && storedUserPhone) {
       setUser({
         id: parseInt(storedUserId),
         firstName: storedUserFirstName,
-        // lastName может быть null, поэтому проверяем его наличие
         lastName: storedUserLastName === 'null' ? null : storedUserLastName,
         dob: storedUserDob,
         phone: storedUserPhone,
       });
+      setIsGuest(false);
+    } else {
+      // Если пользователя нет, он - гость. Даем ему приветствие.
+      setIsGuest(true);
+      setGuestMessages([GUEST_WELCOME_MESSAGE]);
     }
-  }, []); // Пустой массив зависимостей = выполнится только один раз
+  }, []);
 
-  // --- 2. ОБНОВЛЕННАЯ ФУНКЦИЯ ЛОГИНА ---
-  const handleLogin = (loggedInUser: User) => {
-    // Сохраняем все новые поля в localStorage
-    localStorage.setItem('dream_user_id', String(loggedInUser.id));
-    localStorage.setItem('dream_user_firstName', loggedInUser.firstName);
-    // lastName может быть null, поэтому сохраняем его как строку 'null'
-    localStorage.setItem('dream_user_lastName', String(loggedInUser.lastName));
-    localStorage.setItem('dream_user_dob', loggedInUser.dob);
-    localStorage.setItem('dream_user_phone', loggedInUser.phone);
+  const handleRegisterSuccess = (registeredUser: User) => {
+    localStorage.setItem('dream_user_id', String(registeredUser.id));
+    localStorage.setItem('dream_user_firstName', registeredUser.firstName);
+    localStorage.setItem('dream_user_lastName', String(registeredUser.lastName));
+    localStorage.setItem('dream_user_dob', registeredUser.dob);
+    localStorage.setItem('dream_user_phone', registeredUser.phone);
 
-    // Устанавливаем пользователя в состояние, чтобы переключить экран
-    setUser(loggedInUser);
+    setUser(registeredUser);
+    setIsGuest(false);
+    setShowRegisterModal(false);
+    // Очищаем временные гостевые сообщения
+    setGuestMessages([]);
   };
 
-  // --- 3. ОБНОВЛЕННАЯ ФУНКЦИЯ ВЫХОДА ---
+  // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ВЫХОДА ---
   const handleLogout = () => {
-    // Очищаем все ключи из localStorage при выходе
+    // Очищаем данные пользователя
     localStorage.removeItem('dream_user_id');
     localStorage.removeItem('dream_user_firstName');
-    localStorage.removeItem('dream_user_lastName');
-    localStorage.removeItem('dream_user_dob');
-    localStorage.removeItem('dream_user_phone');
+    // ... (удаляем остальные user поля)
+
+    // Устанавливаем флаг, что гостевая попытка использована
+    localStorage.setItem('guest_attempt_used', 'true');
+
+    // Сбрасываем состояние
     setUser(null);
+    setIsGuest(true);
+    // Теперь чат для вышедшего пользователя будет пустым, но ввод будет заблокирован
+    setGuestMessages([]);
   };
+  // --- КОНЕЦ ИСПРАВЛЕНИЙ ---
 
   return (
     <div className="w-full min-h-screen bg-slate-900">
-      {user ? <ChatScreen user={user} onLogout={handleLogout} /> : <LoginScreen onLogin={handleLogin} />}
+      <ChatScreen
+        user={user}
+        isGuest={isGuest}
+        guestMessages={guestMessages}
+        setGuestMessages={setGuestMessages}
+        onLogout={handleLogout}
+        onRequestRegister={() => setShowRegisterModal(true)}
+      />
+      {showRegisterModal && (
+        <RegisterModal
+          guestMessages={guestMessages}
+          onRegisterSuccess={handleRegisterSuccess}
+          onClose={() => setShowRegisterModal(false)}
+        />
+      )}
     </div>
   );
 };

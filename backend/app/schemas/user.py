@@ -1,6 +1,12 @@
 # backend/app/schemas/user.py
 from pydantic import BaseModel
 from datetime import date
+from typing import List, Optional
+
+
+class GuestMessage(BaseModel):
+    request_text: str
+    response_text: str
 
 class UserBase(BaseModel):
     first_name: str
@@ -9,7 +15,7 @@ class UserBase(BaseModel):
     phone: str
 
 class UserCreate(UserBase):
-    pass
+    guest_messages: Optional[List[GuestMessage]] = None
 
 class User(UserBase):
     id: int

@@ -12,15 +12,23 @@ export class ApiError extends Error {
     }
 }
 
-// Определяем интерфейс для данных, которые мы отправляем
+// --- ИНТЕРФЕЙСЫ ДЛЯ ТИПИЗАЦИИ ---
+
+// Интерфейс для одной пары "вопрос-ответ" гостя
+interface GuestMessagePayload {
+    request_text: string;
+    response_text: string;
+}
+
+// --- 1. ОБНОВЛЯЕМ ИНТЕРФЕЙС ДАННЫХ ДЛЯ СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ ---
 interface CreateUserPayload {
     first_name: string;
     last_name?: string | null;
     dob: string;
     phone: string;
+    guest_messages?: GuestMessagePayload[]; // Добавляем опциональное поле
 }
 
-// Определяем интерфейс для ответа от бэкенда
 interface UserResponse {
     id: number;
     first_name: string;
@@ -29,7 +37,9 @@ interface UserResponse {
     phone: string;
 }
 
-// Функция для регистрации нового пользователя
+// --- ФУНКЦИИ API ---
+
+// Функция для регистрации нового пользователя (код остается без изменений, т.к. он уже принимает payload)
 export const createUser = async (payload: CreateUserPayload): Promise<UserResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/users/`, {
         method: 'POST',
@@ -39,57 +49,13 @@ export const createUser = async (payload: CreateUserPayload): Promise<UserRespon
 
     if (!response.ok) {
         const errorData = await response.json();
-        // Создаем и "выбрасываем" нашу кастомную ошибку
         throw new ApiError(response, errorData);
     }
 
     return response.json();
 };
 
-// Функция для отправки сна (остается без изменений)
-export const interpretDream = async (text: string, userId: number): Promise<{ interpretation: string }> => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/chat/interpret`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, user_id: userId })
-    });
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new ApiError(response, errorData);
-    }
-    return response.json();
-};
-
-export const getChatHistory = async (userId: number): Promise<any[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/history`);
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new ApiError(response, errorData);
-    }
-    return response.json();
-};
-
-// frontend/apiClient.ts
-// ... (ApiError, createUser, interpretDream, getChatHistory) ...
-
-// --- НОВАЯ ФУНКЦИЯ ---
-export const createInvoice = async (userId: number): Promise<{ payment_url: string }> => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/payment/create_invoice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, amount: 100.0 }) // Можно передавать и другие параметры
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new ApiError(response, errorData);
-    }
-
-    return response.json();
-};
-
-
-
+// Функция для отправки сна от ГОСТЯ
 export const interpretGuestDream = async (text: string): Promise<{ interpretation: string }> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/chat/interpret_guest`, {
         method: 'POST',
@@ -103,11 +69,36 @@ export const interpretGuestDream = async (text: string): Promise<{ interpretatio
     return response.json();
 };
 
-export const loginUser = async (phone: string): Promise<UserResponse> => {
-    const response = await fetch(`${API_БASE_URL}/api/v1/users/login`, {
+// Функция для отправки сна от ЗАРЕГИСТРИРОВАННОГО пользователя
+export const interpretDream = async (text: string, userId: number): Promise<{ interpretation: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/chat/interpret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ text, user_id: userId })
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new ApiError(response, errorData);
+    }
+    return response.json();
+};
+
+// Функция для получения истории чата
+export const getChatHistory = async (userId: number): Promise<any[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/history`);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new ApiError(response, errorData);
+    }
+    return response.json();
+};
+
+// Функция для создания счета на оплату
+export const createInvoice = async (userId: number): Promise<{ payment_url: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/payment/create_invoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, amount: 100.0 })
     });
 
     if (!response.ok) {
