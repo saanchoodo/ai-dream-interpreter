@@ -68,3 +68,22 @@ export const getChatHistory = async (userId: number): Promise<any[]> => {
     }
     return response.json();
 };
+
+// frontend/apiClient.ts
+// ... (ApiError, createUser, interpretDream, getChatHistory) ...
+
+// --- НОВАЯ ФУНКЦИЯ ---
+export const createInvoice = async (userId: number): Promise<{ payment_url: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/payment/create_invoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, amount: 100.0 }) // Можно передавать и другие параметры
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new ApiError(response, errorData);
+    }
+
+    return response.json();
+};
