@@ -307,14 +307,37 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ user, isGuest, guestMessages, s
             </div>
           ) : (
             <div className="flex items-start max-w-4xl mx-auto gap-2">
-              <button
-                onClick={handlePaymentClick}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-3 text-sm font-medium uppercase tracking-wider text-amber-300 bg-amber-900/50 rounded-full hover:bg-amber-800/50 transition-colors"
-                aria-label="Получить премиум-толкование"
-              >
-                <span className="text-lg">✨</span>
-                <span>ПРЕМИУМ</span>
-              </button>
+
+              {/* --- 1. Оборачиваем кнопку в relative group-контейнер --- */}
+              <div className="relative group flex-shrink-0">
+                <button
+                  onClick={handlePaymentClick}
+                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium uppercase tracking-wider text-amber-300 bg-amber-900/50 rounded-full hover:bg-amber-800/50 transition-colors"
+                  aria-label="Получить премиум-толкование"
+                >
+                  <span className="text-lg">✨</span>
+                  <span>ПРЕМИУМ</span>
+                </button>
+
+                {/* --- 2. Добавляем всплывающее окно (без кнопки внутри) --- */}
+                <div
+                  className="absolute bottom-full mb-3 w-72 p-4 bg-slate-900 ring-1 ring-slate-700 rounded-lg shadow-xl
+                             opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100
+                             transition-all duration-300 ease-in-out transform
+                             pointer-events-none" // Клики "пролетают" сквозь это окно
+                >
+                  <h4 className="font-bold text-white">Погрузитесь в глубины подсознания</h4>
+                  <p className="mt-2 text-sm text-slate-300">
+                    Глубокий анализ сновидений, расшифровка скрытых метафор и пожизненный архив ваших снов.
+                  </p>
+                  <p className="mt-3 text-lg font-semibold text-amber-400">200 рублей / месяц</p>
+
+                  {/* Маленький треугольник-стрелочка внизу */}
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-4 h-4 bg-slate-900 ring-1 ring-slate-700 transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Форма остается без изменений */}
               <form onSubmit={handleSendMessage} className="flex items-start flex-1 gap-2">
                 <textarea
                   rows={1}

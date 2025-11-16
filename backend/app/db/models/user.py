@@ -13,5 +13,6 @@ class User(Base):
     dob = Column(Date, nullable=False) # Дата рождения
     phone = Column(String(20), nullable=False, unique=True, index=True) # Телефон (уникальный!)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
 
     dreams = relationship("Dream", back_populates="owner")
