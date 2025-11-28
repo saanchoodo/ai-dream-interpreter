@@ -32,11 +32,12 @@ OPENROUTER_API_KEY='ваш ключ'
 
 - **Backend**: FastAPI (Python)
 - **Frontend**: React + TypeScript + Vite
-- **БД**: SQLite (для хакатона), через SQLAlchemy
+- **БД**: POSTGRES (для хакатона), через SQLAlchemy
 - **Модель**: Внешний LLM (настраивается через API)
 - **CORS**: Разрешены локальные домены и `file://` (для HTML-файлов)
 - **Зависимости**: `pydantic`, `uvicorn`, `SQLAlchemy`,
 
 ---
+
 
 
