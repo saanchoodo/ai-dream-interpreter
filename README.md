@@ -1,10 +1,12 @@
 # 🌙 AI Dream Interpreter (ИИ Сонник)
 
 Нейросеть, которая анализирует ваши сны и даёт глубокую психологическую интерпретацию.  
-Создано на FastAPI + React/Vite для хакатона **Кибер102 Уфа**.
+Создано на FastAPI + React/Vite для хакатона **Кибер102**.
 для работы нужно создать .env файл 
 POSTGRES_USER=myuser
+
 POSTGRES_PASSWORD=mypassword
+
 POSTGRES_DB=dream_db
 
 DATABASE_URL=postgresql+psycopg2://myuser:mypassword@db:5432/dream_db
@@ -33,3 +35,4 @@ OPENROUTER_API_KEY='ваш ключ'
 - **Зависимости**: `pydantic`, `uvicorn`, `SQLAlchemy`,
 
 ---
+
