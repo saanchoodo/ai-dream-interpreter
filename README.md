@@ -13,6 +13,9 @@ DATABASE_URL=postgresql+psycopg2://myuser:mypassword@db:5432/dream_db
 
 OPENROUTER_API_KEY='ваш ключ'
 
+Далее запустить в папке frontend npm run dev
+А также в отдельном терминале docker compose up
+
 ---
 
 ## 🚀 Основные функции
@@ -35,4 +38,5 @@ OPENROUTER_API_KEY='ваш ключ'
 - **Зависимости**: `pydantic`, `uvicorn`, `SQLAlchemy`,
 
 ---
+
 
