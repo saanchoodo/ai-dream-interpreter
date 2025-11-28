@@ -1,6 +1,11 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+# --- НОВАЯ СХЕМА ДЛЯ ГОСТЯ ---
+class GuestDreamRequest(BaseModel):
+    text: str = Field(..., min_length=10, description="Текст сна гостя")
+# --- КОНЕЦ ---
+
 class DreamRequest(BaseModel):
     text: str = Field(..., min_length=10, description="Текст сна пользователя")
     user_id: int

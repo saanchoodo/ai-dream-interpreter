@@ -8,10 +8,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    dob = Column(Date, nullable=True) # dob = Date of Birth
+    first_name = Column(String(100), nullable=False) # Имя
+    last_name = Column(String(100), nullable=True)  # Фамилия (необязательно)
+    dob = Column(Date, nullable=False) # Дата рождения
+    phone = Column(String(20), nullable=False, unique=True, index=True) # Телефон (уникальный!)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    telegram_id = Column(Integer, unique=True, index=True, nullable=True)
 
-    # Эта строка создает "виртуальную" колонку, которая будет
-    # содержать все сны, связанные с этим пользователем.
     dreams = relationship("Dream", back_populates="owner")

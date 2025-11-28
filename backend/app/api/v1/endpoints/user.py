@@ -1,35 +1,76 @@
-# backend/app/api/v1/endpoints/user.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from app.schemas.user import User, UserCreate
 from app.db.session import get_db
 from app.db.models.user import User as UserModel
 from app.schemas.dream import ChatHistoryMessage
 from app.db.models.dream import Dream as DreamModel
-from typing import List
 
 router = APIRouter()
 
-@router.post("/", response_model=User)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(UserModel).filter(
-        UserModel.name == user.name,
-        UserModel.dob == user.dob
-    ).first()
 
-    # 2. Если пользователь найден - возвращаем его
-    if db_user:
-        print(f"Пользователь '{user.name}' найден. Выполняется вход.")
-        return db_user
+@router.post("/", response_model=User, status_code=200)  # Меняем статус на 200 OK, т.к. может быть и логин
+def smart_login_or_create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    """
+    Ищет пользователя по номеру телефона.
+    - Если не найден: создает нового и сохраняет его гостевую историю (если есть).
+    - Если найден: проверяет остальные данные. Если они совпадают - логинит.
+    - Если найден, но данные не совпадают - возвращает ошибку.
+    """
+    existing_user = db.query(UserModel).filter(UserModel.phone == user_data.phone).first()
 
-    # 3. Если пользователь не найден - создаем нового
-    print(f"Пользователь '{user.name}' не найден. Создается новая запись.")
-    new_user = UserModel(name=user.name, dob=user.dob)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+    # Сценарий А: Пользователь НЕ найден -> Создаем нового
+    if not existing_user:
+        print(f"Пользователь с тел. {user_data.phone} не найден. Создаем нового.")
+
+        new_user = UserModel(
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            dob=user_data.dob,
+            phone=user_data.phone
+        )
+        db.add(new_user)
+
+        # --- ИНТЕГРАЦИЯ НОВОЙ ЛОГИКИ ЗДЕСЬ ---
+        # Проверяем, передал ли фронтенд гостевые сообщения
+        if user_data.guest_messages:
+            db.flush()  # Получаем ID для new_user, не завершая транзакцию
+            print(
+                f"Сохранение {len(user_data.guest_messages)} гостевых сообщений для нового пользователя ID: {new_user.id}")
+
+            for msg_pair in user_data.guest_messages:
+                db_dream = DreamModel(
+                    request_text=msg_pair.request_text,
+                    response_text=msg_pair.response_text,
+                    user_id=new_user.id
+                )
+                db.add(db_dream)
+        # --- КОНЕЦ ИНТЕГРАЦИИ ---
+
+        db.commit()
+        db.refresh(new_user)
+        # Устанавливаем статус 201 Created только при создании
+        # Для этого нужно будет немного переделать ответ FastAPI, но для хакатона это не критично
+        return new_user
+
+    # Сценарий Б: Пользователь НАЙДЕН -> Проверяем данные
+    else:
+        is_first_name_match = existing_user.first_name.lower() == user_data.first_name.lower()
+        is_last_name_match = (existing_user.last_name or "").lower() == (user_data.last_name or "").lower()
+        is_dob_match = str(existing_user.dob) == str(user_data.dob)
+
+        if is_first_name_match and is_last_name_match and is_dob_match:
+            print(f"Пользователь с тел. {user_data.phone} найден, данные совпадают. Логин успешен.")
+            # Важно: При логине гостевая история НЕ сохраняется, т.к. у пользователя уже есть своя.
+            return existing_user
+        else:
+            print(f"Пользователь с тел. {user_data.phone} найден, но данные НЕ совпадают. Отказ.")
+            raise HTTPException(
+                status_code=409,
+                detail="Пользователь с этим номером телефона уже существует, но с другими данными. Проверьте правильность введенных данных."
+            )
 
 
 @router.get("/{user_id}/history", response_model=List[ChatHistoryMessage])
@@ -41,17 +82,13 @@ def get_user_chat_history(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Получаем все сны пользователя, отсортированные по дате (старые вверху)
     dreams = db.query(DreamModel).filter(DreamModel.user_id == user_id).order_by(DreamModel.created_at.asc()).all()
 
-    # Превращаем список снов в плоский список сообщений
     history: List[ChatHistoryMessage] = []
     for dream in dreams:
-        # Добавляем сообщение пользователя
         history.append(
             ChatHistoryMessage(role='user', text=dream.request_text, created_at=dream.created_at)
         )
-        # Добавляем ответ бота, если он есть
         if dream.response_text:
             history.append(
                 ChatHistoryMessage(role='bot', text=dream.response_text, created_at=dream.created_at)
